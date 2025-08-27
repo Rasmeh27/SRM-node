@@ -1,0 +1,106 @@
+{
+  "users": [
+    {
+      "id": "user-patient-001",
+      "email": "paciente@demo",
+      "password_hash": "x",
+      "role": "patient",
+      "full_name": "Paciente Demo",
+      "created_at": "2025-08-25T12:00:00Z"
+    },
+    {
+      "id": "user-doctor-001",
+      "email": "doctor@demo",
+      "password_hash": "x",
+      "role": "doctor",
+      "full_name": "Dra. Demo",
+      "created_at": "2025-08-25T12:00:00Z"
+    },
+    {
+      "id": "user-pharmacy-001",
+      "email": "pharma@demo",
+      "password_hash": "x",
+      "role": "pharmacy",
+      "full_name": "Farmacia Demo",
+      "created_at": "2025-08-25T12:00:00Z"
+    },
+    {
+      "id": "user-regulator-001",
+      "email": "reg@demo",
+      "password_hash": "x",
+      "role": "regulator",
+      "full_name": "Regulador Demo",
+      "created_at": "2025-08-25T12:00:00Z"
+    }
+  ],
+  "patients": [
+    {
+      "id": "user-patient-001"
+    }
+  ],
+  "doctors": [
+    {
+      "id": "user-doctor-001",
+      "exequatur": "EX-12345"
+    }
+  ],
+  "prescriptions": [
+    {
+      "id": "rx-001",
+      "patient_id": "user-patient-001",
+      "doctor_id": "user-doctor-001",
+      "status": "DISPENSED",
+      "pdf_url": "https://demo/prescriptions/rx-001.pdf",
+      "hash_sha256": "demo-hash-abcdef",
+      "created_at": "2025-08-25T12:05:00Z",
+      "dispensed_by": "user-pharmacy-001"
+    }
+  ],
+  "prescription_items": [
+    {
+      "id": "item-001",
+      "prescription_id": "rx-001",
+      "drug_code": "AMOX500",
+      "name": "Amoxicilina 500mg",
+      "quantity": 1,
+      "dosage": "1 c/8h por 7 días"
+    }
+  ],
+  "dispensations": [
+    {
+      "id": "disp-1756244801713",
+      "prescription_id": "rx-001",
+      "pharmacy_id": "user-pharmacy-001",
+      "timesstamp": "2025-08-26T21:46:41.713Z",
+      "location": "Farmacia Demo",
+      "items": [
+        {
+          "drug_code": "AMOX500",
+          "quantity": 1
+        }
+      ],
+      "verification_method": "QR",
+      "notes": null
+    }
+  ],
+  "access_grants": [],
+  "audit_events": [
+    {
+      "id": 1756244801715,
+      "actor_id": "user-pharmacy-001",
+      "action": "PRESCRIPTION_DISPENSED",
+      "entity_id": "rx-001",
+      "metadata": {
+        "items": [
+          {
+            "drug_code": "AMOX500",
+            "quantity": 1
+          }
+        ],
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.45.0"
+      },
+      "created_at": "2025-08-26T21:46:41.715Z"
+    }
+  ]
+}
