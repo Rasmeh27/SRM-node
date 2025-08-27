@@ -30,7 +30,7 @@ function buildHistoryForPatient(patientId, query = {}) {
         ? {
             timestap: dispByRx[p.id].timestap,
             pharmacy: userById[dispByRx[p.id].pharmacy_id]?.full_name || "N/D",
-            location: dispByRx[p.id].location || nul,
+            location: dispByRx[p.id].location || null,
           }
         : null,
     }));
