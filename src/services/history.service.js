@@ -6,7 +6,7 @@ function buildHistoryForPatient(patientId, query = {}) {
   //listar las recetas del paciente
   let list = db.prescriptions.filter((p) => p.patient_id === patientId);
 
-  const itemByBox = groupBy(db.prescriptions_items, "prescription_id");
+  const itemByBox = groupBy(db.prescription_items, "prescription_id");
   const dispByRx = indexBy(db.dispensations, "prescription_id");
   const userById = indexBy(db.users, "id");
 
@@ -14,13 +14,13 @@ function buildHistoryForPatient(patientId, query = {}) {
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .map((p) => ({
       id: p.id,
-      created_at: p.created_at,
+      createdAt: p.created_at,
       status: p.status,
       doctor: {
         id: p.doctor_id,
         name: userById[p.doctor_id]?.full_name || "N/D",
       },
-      items: (itemByRx[p.id] || []).map((it) => ({
+      items: (itemByBox[p.id] || []).map((it) => ({
         drug_code: it.drug_code,
         name: it.name,
         quantity: it.quantity,
@@ -28,35 +28,24 @@ function buildHistoryForPatient(patientId, query = {}) {
       })),
       dispensation: dispByRx[p.id]
         ? {
-            timestap: dispByRx[p.id].timestap,
-            pharmacy: userById[dispByRx[p.id].pharmacy_id]?.full_name || "N/D",
-            location: dispByRx[p.id].location || null,
+            timestamp: dispByRx[p.id].timestamp,
+            pharmacyId: dispByRx[p.id].pharmacy_id,
           }
         : null,
     }));
 
-  // 4) Paginación
-  const page = Number(query.page || 1);
-  const size = Math.min(Number(query.size || 20), 100);
-  const start = (page - 1) * size;
-  const paged = result.slice(start, start + size);
-
-  return {
-    ok: true,
-    data: { items: paged, page, size, total: result.length },
-  };
+  return { ok: true, data: result };
 }
 
-// Helpers mini
-function groupBy(arr, key) {
-  return arr.reduce((acc, x) => {
-    (acc[x[key]] ||= []).push(x);
+function groupBy(arr = [], key) {
+  return arr.reduce((acc, it) => {
+    (acc[it[key]] = acc[it[key]] || []).push(it);
     return acc;
   }, {});
 }
 
-function indexBy(arr, key) {
-  return arr.reduce((acc, x) => ((acc[x[key]] = x), acc), {});
+function indexBy(arr = [], key) {
+  return arr.reduce((acc, it) => ((acc[it[key]] = it), acc), {});
 }
 
 module.exports = { buildHistoryForPatient };

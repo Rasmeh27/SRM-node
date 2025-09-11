@@ -54,6 +54,52 @@
       "hash_sha256": "demo-hash-abcdef",
       "created_at": "2025-08-25T12:05:00Z",
       "dispensed_by": "user-pharmacy-001"
+    },
+    {
+      "id": "rx-mf33biq4ivwn",
+      "patient_id": "user-patient-001",
+      "doctor_id": "user-doctor-001",
+      "status": "EMITTED",
+      "pdf_url": null,
+      "hash_sha256": "7d69f0a568130d66c66dc0ba8195f970752dabf19c945e4cdc5f59b80e12cb27",
+      "created_at": "2025-09-02T21:58:40.012Z",
+      "dispensed_by": null
+    },
+    {
+      "id": "rx-mf340yhx05ox",
+      "patient_id": "user-patient-001",
+      "doctor_id": "user-doctor-001",
+      "status": "EMITTED",
+      "pdf_url": null,
+      "hash_sha256": "3de3aa0828fe2e1c1de543d2159eb9c26d22aae35a50aaf7e6c61c2f9096edec",
+      "created_at": "2025-09-02T22:18:26.853Z",
+      "dispensed_by": null,
+      "signature": {
+        "alg": "RSA-SHA256",
+        "signature_b64": "FPPtHtKYRNqbkUWSidNk9Sj1lnJxkY/bLxZwvhHHXvmnWn+2THEPQUuncoM+wd2xwyJs7nIA9ybs3OAk2bPCWou9FBn0ieId5TidR6YnOZd73zt6A55kntrQgpXlwbtQ+/pqGk4zA3PD4kerY1h9Hgn/YdoOTzKtTuwoUSwqBnSva0N3ioZFS6E1YpwZ0Zmi1hfekkBi5YHUQDmdfJOiifVhJlAbY8ZUisBwcEhdadNQnLW9eQPpoFpGPggT1XJ4WmxJdL/0ESDxX+sh1NdUAILe75SdkwgBB7OZolzaX+c1SGQ9FD/ZjlD7s74YAm4TEnG45IWkMMxR+A2X3YwKRg==",
+        "signed_at": "2025-09-03T15:58:15.785Z",
+        "signer_id": "user-doctor-001",
+        "cert_subject": "CN=Dra Demo, O=Hospital Demo",
+        "cert_serial": "DEMO-001"
+      }
+    },
+    {
+      "id": "rx_1757566102532_jjcm3y",
+      "patient_id": "user-patient-001",
+      "doctor_id": "user-doctor-001",
+      "status": "DISPENSED",
+      "pdf_url": null,
+      "hash_sha256": "08bd06279d11a924ef1acd23c67c8a3aec73f839ee9cdef4d383810ba9708572",
+      "created_at": "2025-09-11T04:48:22.533Z",
+      "dispensed_by": "user-pharmacy-001",
+      "signed_at": "2025-09-11T05:51:54.310Z",
+      "signature_b64": "xGWFWmRR0Ye38uLk4OHt4vCAXSH8TaZdSLXp4bA9EAtWc7JaqEeehycvbJwebpNVarxOQ2qIni91LXoehtmCjxGX2ttVWtkE1dvtCd+nnOGvSihQi0IG8Puy9oQ1cbZ8h0irP8UTZE4B/hR1jZFHqEnyBSsNfciu5XU0UOHQqw8w72hokrX9xnEa2wobnnnOV4H+Pgx/m4rwpM72VJTPVD79OJj7UU226bFhr8JeNgTRgZwYNC15ipAgvIQ44zCVn7q6oTH7DCu/q+vnk7/DCqzJxYlzW3T/kvXpjCxR8ufQdEru65MEFxxTp2YoFdgs4zFiIw6S+3+82yGXJOUstQ==",
+      "anchor": {
+        "network": "placeholder",
+        "txid": "demo-1757570086961",
+        "anchored_at": "2025-09-11T05:54:46.961Z"
+      },
+      "dispensed_at": "2025-09-11T06:06:01.144Z"
     }
   ],
   "prescription_items": [
@@ -64,6 +110,38 @@
       "name": "Amoxicilina 500mg",
       "quantity": 1,
       "dosage": "1 c/8h por 7 días"
+    },
+    {
+      "id": "item-o4ufipk7",
+      "prescription_id": "rx-mf33biq4ivwn",
+      "drug_code": "AMOX500",
+      "name": "Amoxicilina 500mg",
+      "quantity": 1,
+      "dosage": "1 c/8h por 7 días"
+    },
+    {
+      "id": "item-zcn91jie",
+      "prescription_id": "rx-mf340yhx05ox",
+      "drug_code": "AMOX500",
+      "name": "Amoxicilina 500mg",
+      "quantity": 1,
+      "dosage": "1 c/8h por 7 días"
+    },
+    {
+      "id": "item-rx_1757566102532_jjcm3y-1",
+      "prescription_id": "rx_1757566102532_jjcm3y",
+      "drug_code": "AMOX500",
+      "name": "Amoxicilina 500 mg",
+      "quantity": 1,
+      "dosage": "1 cápsula cada 8h por 7 días"
+    },
+    {
+      "id": "item-rx_1757566102532_jjcm3y-2",
+      "prescription_id": "rx_1757566102532_jjcm3y",
+      "drug_code": "IBU400",
+      "name": "Ibuprofeno 400 mg",
+      "quantity": 1,
+      "dosage": "1 tableta cada 8h si dolor (máx 3/día)"
     }
   ],
   "dispensations": [
@@ -81,6 +159,25 @@
       ],
       "verification_method": "QR",
       "notes": null
+    },
+    {
+      "id": "disp-1757570761145",
+      "prescription_id": "rx_1757566102532_jjcm3y",
+      "pharmacy_id": "user-pharmacy-001",
+      "timestamp": "2025-09-11T06:06:01.145Z",
+      "location": "Farmacia Demo",
+      "items": [
+        {
+          "drug_code": "AMOX500",
+          "quantity": 1
+        },
+        {
+          "drug_code": "IBU400",
+          "quantity": 1
+        }
+      ],
+      "verification_method": "QR",
+      "notes": "Entregado en mostrador"
     }
   ],
   "access_grants": [],
@@ -101,6 +198,156 @@
         "ua": "PostmanRuntime/7.45.0"
       },
       "created_at": "2025-08-26T21:46:41.715Z"
+    },
+    {
+      "id": 1756850320021,
+      "actor_id": "user-doctor-001",
+      "action": "PRESCRIPTION_EMITTED",
+      "entity_id": "rx-mf33biq4ivwn",
+      "metadata": {
+        "items": [
+          {
+            "drug_code": "AMOX500",
+            "quantity": 1
+          }
+        ]
+      },
+      "created_at": "2025-09-02T21:58:40.012Z"
+    },
+    {
+      "id": 1756851506876,
+      "actor_id": "user-doctor-001",
+      "action": "PRESCRIPTION_EMITTED",
+      "entity_id": "rx-mf340yhx05ox",
+      "metadata": {
+        "items": [
+          {
+            "drug_code": "AMOX500",
+            "quantity": 1
+          }
+        ]
+      },
+      "created_at": "2025-09-02T22:18:26.853Z"
+    },
+    {
+      "id": 1756915095787,
+      "actor_id": "user-doctor-001",
+      "action": "PRESCRIPTION_SIGNED",
+      "entity_id": "rx-mf340yhx05ox",
+      "metadata": {
+        "alg": "RSA-SHA256",
+        "cert_subject": "CN=Dra Demo, O=Hospital Demo",
+        "cert_serial": "DEMO-001"
+      },
+      "created_at": "2025-09-03T15:58:15.785Z"
+    },
+    {
+      "id": 1757566102536,
+      "actor_id": "user-doctor-001",
+      "action": "RX_CREATE",
+      "entity_id": "rx_1757566102532_jjcm3y",
+      "metadata": {
+        "by": "user-doctor-001",
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.45.0"
+      },
+      "created_at": "2025-09-11T04:48:22.536Z"
+    },
+    {
+      "id": 1757569914317,
+      "actor_id": "user-doctor-001",
+      "action": "RX_SIGN",
+      "entity_id": "rx_1757566102532_jjcm3y",
+      "metadata": {
+        "by": "user-doctor-001",
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.45.0"
+      },
+      "created_at": "2025-09-11T05:51:54.317Z"
+    },
+    {
+      "id": 1757570048117,
+      "actor_id": "user-doctor-001",
+      "action": "RX_ANCHOR",
+      "entity_id": "rx_1757566102532_jjcm3y",
+      "metadata": {
+        "by": "user-doctor-001",
+        "anchor": {
+          "network": "placeholder",
+          "txid": "demo-1757570048112",
+          "anchored_at": "2025-09-11T05:54:08.112Z"
+        },
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.45.0"
+      },
+      "created_at": "2025-09-11T05:54:08.117Z"
+    },
+    {
+      "id": 1757570086965,
+      "actor_id": "user-doctor-001",
+      "action": "RX_ANCHOR",
+      "entity_id": "rx_1757566102532_jjcm3y",
+      "metadata": {
+        "by": "user-doctor-001",
+        "anchor": {
+          "network": "placeholder",
+          "txid": "demo-1757570086961",
+          "anchored_at": "2025-09-11T05:54:46.961Z"
+        },
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.45.0"
+      },
+      "created_at": "2025-09-11T05:54:46.965Z"
+    },
+    {
+      "id": 1757570270062,
+      "actor_id": "user-doctor-001",
+      "action": "RX_QR_TOKEN",
+      "entity_id": "rx_1757566102532_jjcm3y",
+      "metadata": {
+        "by": "user-doctor-001",
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.45.0"
+      },
+      "created_at": "2025-09-11T05:57:50.062Z"
+    },
+    {
+      "id": 1757570604871,
+      "actor_id": "user-pharmacy-001",
+      "action": "RX_VERIFY",
+      "entity_id": "rx_1757566102532_jjcm3y",
+      "metadata": {
+        "by": "user-pharmacy-001",
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.45.0"
+      },
+      "created_at": "2025-09-11T06:03:24.871Z"
+    },
+    {
+      "id": 1757570761150,
+      "actor_id": "user-pharmacy-001",
+      "action": "RX_DISPENSE",
+      "entity_id": "rx_1757566102532_jjcm3y",
+      "metadata": {
+        "by": "user-pharmacy-001",
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.45.0"
+      },
+      "created_at": "2025-09-11T06:06:01.150Z"
+    }
+  ],
+  "medications": [
+    {
+      "drug_code": "AMOX500",
+      "name": "Amoxicilina 500mg"
+    },
+    {
+      "drug_code": "PARA500",
+      "name": "Paracetamol 500mg"
+    },
+    {
+      "drug_code": "IBU400",
+      "name": "Ibuprofeno 400mg"
     }
   ]
 }

@@ -1,16 +1,13 @@
 {
   "name": "srm-backend",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "1.1.0",
+  "description": "Sistema de Recetas Médicas (SRM) - backend integrado Luis + Xavier",
+  "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/index.js"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
-  "description": "",
   "devDependencies": {
     "nodemon": "^3.1.10"
   }
