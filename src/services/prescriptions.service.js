@@ -1,104 +1,79 @@
-// src/services/prescriptions.service.js (integrado)
+// src/services/prescriptions.service.js (Supabase/Postgres + anchor real + secreto por RX)
 const crypto = require("crypto");
-const { loadDB, saveDB } = require("../db/storage");
+const repo = require("../repositories/prescriptions.repo");
 const { signRSASha256 } = require("../crypto/sign");
+const jwt = require("jsonwebtoken");
+
+
+const ANCHOR_MODE = (process.env.ANCHOR_MODE || "").toLowerCase();
 
 // ---------- utils ----------
 const nowISO = () => new Date().toISOString();
 const sha256 = (s) => crypto.createHash("sha256").update(s).digest("hex");
-const base64url = (buf) => Buffer.from(buf).toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+const b64url = (buf) =>
+  Buffer.from(buf).toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+const hmacHex = (data, secret) =>
+  crypto.createHmac("sha256", secret).update(data).digest("hex");
 
-// Token QR/NFC (HMAC sobre payload)
-const VERIFY_SECRET = process.env.VERIFY_SECRET || "dev-verify-secret";
-function hmac(dataObj) {
-  const data = JSON.stringify(dataObj);
-  return crypto.createHmac("sha256", VERIFY_SECRET).update(data).digest("hex");
+async function listMedications() {
+  return await repo.listMedications();
 }
-
-// ---------- helpers ----------
-function ensureUser(db, id, role) {
-  const u = (db.users || []).find((x) => x.id === id && (!role || x.role === role));
-  if (!u) throw new Error(`Usuario ${id} con rol ${role} no existe`);
-  return u;
-}
-function listMedications() {
-  const db = loadDB();
-  return db.medications || [];
-}
-function getByIdOrThrow(db, id) {
-  const x = (db.prescriptions || []).find((p) => p.id === id);
-  if (!x) throw new Error("Prescription not found");
-  return x;
-}
-function itemsForRx(db, rxId) {
-  return (db.prescription_items || []).filter((it) => String(it.prescription_id) === String(rxId));
-}
-function putItems(db, rxId, items) {
-  // items: [{drug_code, name, quantity, dosage}]  ó  [{medication_id, dose, frequency, qty}]
-  const normalized = items.map((it, i) => {
-    if (it.drug_code) {
-      return {
-        id: `item-${rxId}-${i+1}`,
-        prescription_id: rxId,
-        drug_code: String(it.drug_code),
-        name: it.name || null,
-        quantity: Number(it.quantity || 1),
-        dosage: it.dosage || it.dose || null,
-      };
-    }
-    // forma alternativa basada en catálogo
-    const med = (loadDB().medications || []).find((m) => String(m.id) === String(it.medication_id));
-    return {
-      id: `item-${rxId}-${i+1}`,
-      prescription_id: rxId,
-      drug_code: med ? (med.code || med.id) : String(it.medication_id),
-      name: med ? (med.name || med.title) : (it.name || null),
-      quantity: Number(it.qty || it.quantity || 1),
-      dosage: it.dose || it.dosage || null,
-    };
-  });
-
-  // limpiar previos e insertar
-  db.prescription_items = (db.prescription_items || []).filter((x) => x.prescription_id !== rxId);
-  db.prescription_items.push(...normalized);
+async function getByIdOrThrow(id) {
+  const rx = await repo.getPrescriptionById(id);
+  if (!rx) throw new Error("Prescription not found");
+  return rx;
 }
 
 // ---------- emisión ----------
-function createPrescription({ doctorId, patientId, items, notes }) {
-  const db = loadDB();
-  ensureUser(db, doctorId, "doctor");
-  ensureUser(db, patientId, "patient");
+async function createPrescription({ doctorId, patientId, items, notes }) {
+  // Validaciones mínimas
+  if (!doctorId) return { ok: false, status: 400, error: "doctorId requerido" };
+  if (!patientId) return { ok: false, status: 400, error: "patientId requerido" };
   if (!Array.isArray(items) || items.length === 0) {
     return { ok: false, status: 400, error: "Faltan items de la receta" };
   }
 
+  // ⚠️ Saneamos los ítems AQUÍ (no dejamos pasar 'id' ni campos extra del cliente)
+  const cleanItems = items
+    .map((it) => {
+      const drug_code = String(it.drug_code ?? it.code ?? "").trim();
+      const name = String(it.name ?? "").trim();
+      const q = Number(it.quantity ?? 1);
+      const quantity = Number.isFinite(q) && q > 0 ? q : 1;
+      const dosage = it.dosage != null ? String(it.dosage) : null;
+      return { drug_code, name, quantity, dosage };
+    })
+    .filter((i) => i.drug_code && i.name);
+
+  if (cleanItems.length === 0) {
+    return { ok: false, status: 400, error: "Cada item requiere 'drug_code' y 'name'" };
+  }
+
+  // ID legible y secreto por RX (para QR/HMAC)
   const id = `rx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const rx = {
-    id,
-    patient_id: patientId,
-    doctor_id: doctorId,
-    status: "DRAFT",
-    pdf_url: null,
-    hash_sha256: null,
-    created_at: nowISO(),
-    dispensed_by: null,
-  };
+  const verifySecret = crypto.randomBytes(32).toString("hex");
 
-  db.prescriptions = db.prescriptions || [];
-  db.prescriptions.push(rx);
-  putItems(db, id, items);
-  if (!db.dispensations) db.dispensations = [];
-  if (!db.audit_events) db.audit_events = [];
-  saveDB(db);
+  try {
+    await repo.insertPrescriptionWithItems({
+      id,
+      doctorId,
+      patientId,
+      items: cleanItems,       // ✅ solo campos permitidos
+      notes,
+      verifySecret,
+    });
 
-  return { ok: true, data: rx };
+    const rx = await repo.getPrescriptionById(id);
+    const { verify_secret, ...safe } = rx || {}; // No exponemos el secreto
+    return { ok: true, data: safe };
+  } catch (e) {
+    return { ok: false, status: 400, error: e.message };
+  }
 }
 
 // Crea representación canónica para firmar/hashear
-function canonicalizeForSign(db, rx) {
-  const items = itemsForRx(db, rx.id).map((it) => ({
-    drug_code: it.drug_code, name: it.name, quantity: it.quantity, dosage: it.dosage
-  }));
+async function canonicalizeForSign(rx) {
+  const items = await repo.getItemsByRx(rx.id);
   return JSON.stringify({
     id: rx.id,
     patient_id: rx.patient_id,
@@ -109,141 +84,184 @@ function canonicalizeForSign(db, rx) {
   });
 }
 
-function signPrescription({ doctorId, prescriptionId, privateKeyPem }) {
-  const db = loadDB();
-  const rx = getByIdOrThrow(db, prescriptionId);
-  if (rx.doctor_id !== doctorId) {
+async function signPrescription({ doctorId, prescriptionId, privateKeyPem }) {
+  const rx = await repo.getPrescriptionById(prescriptionId);
+  if (!rx) return { ok: false, status: 404, error: "Prescription not found" };
+  if (String(rx.doctor_id) !== String(doctorId)) {
     return { ok: false, status: 403, error: "Solo el doctor emisor puede firmar" };
   }
-  const payload = canonicalizeForSign(db, rx);
-  const signature_b64 = signRSASha256(privateKeyPem, payload);
-  const hash = sha256(payload);
 
-  rx.status = "ISSUED";
-  rx.hash_sha256 = hash;
-  rx.signed_at = nowISO();
-  rx.signature_b64 = signature_b64;
+  const payload = await canonicalizeForSign(rx);
+  let signature_b64, hash;
+  try {
+    signature_b64 = signRSASha256(privateKeyPem, payload);
+    hash = sha256(payload);
+  } catch {
+    return { ok: false, status: 400, error: "privateKeyPem inválido o mal formateado" };
+  }
 
-  saveDB(db);
-  return { ok: true, data: { id: rx.id, status: rx.status, hash: hash, signed_at: rx.signed_at, signature_b64 } };
+  await repo.updateSignature({ id: rx.id, hash, signature_b64 });
+  const updated = await repo.getPrescriptionById(rx.id);
+  return {
+    ok: true,
+    data: { id: updated.id, status: updated.status, hash, signed_at: updated.signed_at, signature_b64 },
+  };
 }
 
-// ---------- verificación (QR/NFC) ----------
-function buildVerifyToken({ prescriptionId, by }) {
+// ---------- verificación (QR/NFC) con secreto por RX ----------
+async function buildVerifyToken({ prescriptionId /*, by*/ }) {
+  const rx = await repo.getPrescriptionById(prescriptionId);
+  if (!rx) throw new Error("Prescription not found");
+  const secret = rx.verify_secret || process.env.VERIFY_SECRET || "dev-verify-secret";
+
   const payload = { pid: prescriptionId, ts: Date.now() };
-  const mac = hmac(payload);
-  const token = base64url(JSON.stringify(payload)) + "." + mac;
+  const data = JSON.stringify(payload);
+  const mac = hmacHex(data, secret);
+  const token = b64url(data) + "." + mac;
   return token;
 }
-function verifyScanToken({ token }) {
+
+async function verifyScanToken({ token }) {
   if (!token || typeof token !== "string" || token.indexOf(".") < 0) {
     return { ok: false, status: 400, error: "Token inválido" };
   }
   const [b64, mac] = token.split(".");
   let payload;
-  try { payload = JSON.parse(Buffer.from(b64, "base64").toString("utf8")); }
-  catch { return { ok: false, status: 400, error: "Token corrupto" }; }
-  const expect = hmac(payload);
+  try {
+    // Decodifica base64url
+    const std = b64.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((b64.length + 3) % 4);
+    payload = JSON.parse(Buffer.from(std, "base64").toString("utf8"));
+  } catch {
+    return { ok: false, status: 400, error: "Token corrupto" };
+  }
+  const rx = await repo.getPrescriptionById(payload.pid);
+  if (!rx) return { ok: false, status: 404, error: "Prescription not found" };
+  const secret = rx.verify_secret || process.env.VERIFY_SECRET || "dev-verify-secret";
+
+  const expect = hmacHex(JSON.stringify(payload), secret);
   if (mac !== expect) return { ok: false, status: 400, error: "Token no válido" };
+
   return { ok: true, data: { prescription_id: payload.pid, issuedAt: new Date(payload.ts).toISOString() } };
 }
 
-// ---------- anchor (placeholder) ----------
-function anchorOnChain({ prescriptionId, by }) {
-  const db = loadDB();
-  const rx = getByIdOrThrow(db, prescriptionId);
-  if (!rx.hash_sha256) {
-    return { ok: false, status: 400, error: "Debe firmarse antes de anclar" };
+// ---------- anclaje ----------
+async function anchorOnChain({ prescriptionId }) {
+  const rx = await repo.getPrescriptionById(prescriptionId);
+  if (!rx) return { ok: false, status: 404, error: "Prescription not found" };
+  if (!rx.hash_sha256) return { ok: false, status: 400, error: "Debe firmarse antes de anclar" };
+
+  if (ANCHOR_MODE === "real") {
+    try {
+      const { anchorHash } = require("../blockchain/anchor");
+      const info = await anchorHash({ hash: rx.hash_sha256, rxId: rx.id });
+      await repo.updateAnchor({ id: rx.id, network: info.network, txid: info.txid, blockNumber: info.blockNumber });
+      return { ok: true, data: info };
+    } catch (e) {
+      return { ok: false, status: 500, error: `Error anclando en blockchain: ${e.message}` };
+    }
   }
-  const anchor = {
-    network: "placeholder",
-    txid: "demo-" + Date.now(),
-    anchored_at: nowISO(),
-  };
-  rx.anchor = anchor;
-  saveDB(db);
-  return { ok: true, data: anchor };
+
+  // Modo demo
+  const demo = { network: "placeholder", txid: "demo-" + Date.now(), anchored_at: nowISO() };
+  await repo.updateAnchor({ id: rx.id, network: demo.network, txid: demo.txid, blockNumber: null });
+  return { ok: true, data: demo };
 }
 
-// ---------- dispensación ----------
-function dispense({ prescriptionId, pharmacyUser, body = {} }) {
-  const db = loadDB();
-  const rx = getByIdOrThrow(db, prescriptionId);
-
-  if (rx.status !== "ISSUED") {
-    return { ok: false, status: 400, error: "Solo recetas emitidas pueden dispensarse" };
+// ---------- consultas de anclaje ----------
+async function getAnchorInfo({ prescriptionId }) {
+  const rx = await getByIdOrThrow(prescriptionId);
+  if (!rx.anchor_txid && !rx.anchor_network) {
+    return { ok: false, status: 404, error: "No hay anclaje para esta receta" };
   }
-  if (!pharmacyUser || pharmacyUser.role !== "pharmacy") {
-    return { ok: false, status: 403, error: "Solo farmacias pueden dispensar" };
-  }
-
-  rx.status = "DISPENSED";
-  rx.dispensed_by = pharmacyUser.id;
-  rx.dispensed_at = nowISO();
-
-  const items = itemsForRx(db, rx.id).map((it) => ({ drug_code: it.drug_code, quantity: it.quantity }));
-  const disp = {
-    id: "disp-" + Date.now(),
-    prescription_id: rx.id,
-    pharmacy_id: pharmacyUser.id,
-    timestamp: nowISO(),
-    location: body.location || pharmacyUser.fullname || "Farmacia",
-    items,
-    verification_method: "QR",
-    notes: body.notes || null,
-  };
-  db.dispensations.push(disp);
-  saveDB(db);
-
   return {
     ok: true,
     data: {
-      id: rx.id,
-      status: rx.status,
-      dispensedAt: rx.dispensed_at,
-      dispensedBy: rx.dispensed_by,
-      dispensation: {
-        id: disp.id,
-        timestamp: disp.timestamp,
-        location: disp.location,
-        items: disp.items,
-        verificationMethod: disp.verification_method,
-      },
-    },
+      network: rx.anchor_network || null,
+      txid: rx.anchor_txid || null,
+      blockNumber: rx.anchor_block || null
+    }
   };
 }
 
-function listPrescriptions({ requester, doctorId, patientId }) {
-  const db = loadDB();
-  let list = db.prescriptions || [];
-  if (doctorId) list = list.filter((p) => String(p.doctor_id) === String(doctorId));
-  if (patientId) list = list.filter((p) => String(p.patient_id) === String(patientId));
-  // Visibilidad mínima
-  if (requester.role === "doctor") {
-    list = list.filter((p) => p.doctor_id === requester.id);
-  } else if (requester.role === "patient") {
-    list = list.filter((p) => p.patient_id === requester.id);
+async function verifyAnchorOnChain({ prescriptionId }) {
+  const rx = await getByIdOrThrow(prescriptionId);
+  if (!rx.anchor_txid) return { ok: false, status: 404, error: "Esta receta aún no tiene txid" };
+
+  try {
+    const { getTxAndReceipt, decodeTxDataHexToUtf8 } = require("../blockchain/anchor");
+    const { tx, receipt } = await getTxAndReceipt(rx.anchor_txid);
+    const payload = decodeTxDataHexToUtf8(tx?.data);
+    const expected = `SRM|sha256|${rx.hash_sha256}|rx:${rx.id}`;
+    return {
+      ok: true,
+      data: {
+        matches: payload === expected,
+        payload,
+        expected,
+        status: receipt?.status ?? null,
+        blockNumber: receipt?.blockNumber ?? null,
+        txid: rx.anchor_txid,
+        network: rx.anchor_network || null,
+      },
+    };
+  } catch (e) {
+    return { ok: false, status: 500, error: `No se pudo verificar on-chain: ${e.message}` };
   }
-  // map items
-  const itemsBy = Object.groupBy
-    ? Object.groupBy(loadDB().prescription_items || [], (it) => it.prescription_id)
-    : (loadDB().prescription_items || []).reduce((acc, it) => ((acc[it.prescription_id] = acc[it.prescription_id] || []).push(it), acc), {});
-  return {
-    ok: true,
-    data: list.map((p) => ({
-      ...p,
-      items: (itemsBy[p.id] || []).map((it) => ({ drug_code: it.drug_code, name: it.name, quantity: it.quantity, dosage: it.dosage })),
-    })),
-  };
+}
+
+// ---------- dispensación ----------
+async function dispense({ prescriptionId, pharmacyUser, body = {} }) {
+  if (!pharmacyUser || pharmacyUser.role !== "pharmacy") {
+    return { ok: false, status: 403, error: "Solo farmacias pueden dispensar" };
+  }
+  try {
+    await repo.insertDispensation({
+      id: prescriptionId,
+      pharmacyId: pharmacyUser.id,
+      location: body.location || pharmacyUser.fullname || "Farmacia",
+      notes: body.notes || null,
+    });
+    const rx = await repo.getPrescriptionById(prescriptionId);
+    const items = await repo.getItemsByRx(prescriptionId);
+    return {
+      ok: true,
+      data: {
+        id: rx.id,
+        status: rx.status,
+        dispensedAt: rx.dispensed_at,
+        dispensedBy: rx.dispensed_by,
+        dispensation: {
+          id: `disp-*`,
+          timestamp: rx.dispensed_at,
+          location: body.location || "Farmacia",
+          items: items.map(i => ({ drug_code: i.drug_code, quantity: i.quantity })),
+          verificationMethod: "QR",
+        },
+      },
+    };
+  } catch (e) {
+    return { ok: false, status: 400, error: e.message };
+  }
+}
+
+async function listPrescriptions({ requester, doctorId, patientId }) {
+  try {
+    const data = await repo.listByRequester({ requester, doctorId, patientId });
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, status: 400, error: e.message };
+  }
 }
 
 module.exports = {
   listMedications,
-  createPrescription,
+  createPrescription,       // ✅ sanea ítems antes de insertarlos
   signPrescription,
-  buildVerifyToken,
-  verifyScanToken,
+  buildVerifyToken,         // async (usa secreto por RX)
+  verifyScanToken,          // async (usa secreto por RX)
   anchorOnChain,
+  getAnchorInfo,
+  verifyAnchorOnChain,
   dispense,
   listPrescriptions,
 };

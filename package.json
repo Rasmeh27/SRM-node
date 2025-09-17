@@ -1,13 +1,20 @@
 {
   "name": "srm-backend",
-  "version": "1.1.0",
-  "description": "Sistema de Recetas Médicas (SRM) - backend integrado Luis + Xavier",
+  "version": "1.2.0",
+  "description": "SRM integrado + anclaje en blockchain (Sepolia)",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js"
   },
   "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "dotenv": "^16.6.1",
+    "ethers": "^5.8.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3"
+  },
   "devDependencies": {
     "nodemon": "^3.1.10"
   }

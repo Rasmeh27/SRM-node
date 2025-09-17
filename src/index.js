@@ -1,39 +1,35 @@
-// src/index.js (integrado)
+// src/index.js
+require("dotenv").config();
 const http = require("http");
-const { authenticate } = require("./middleware/auth");
+const { authUser } = require("./middleware/auth");
+const { handleAuth } = require("./routes/auth.routes");
+const { handleUsers } = require("./routes/users.routes");
 const { handlePrescriptions } = require("./routes/prescriptions.routes");
+
+// ➕ añadir:
 const { handleHistory } = require("./routes/history.routes");
 const { handleGrants } = require("./routes/grants.routes");
 
 const PORT = process.env.PORT || 3000;
 
 const server = http.createServer(async (req, res) => {
-  // 1) Auth
-  const auth = authenticate(req);
-  if (!auth.ok) {
-    res.writeHead(403, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify({ error: auth.error }));
-  }
-  const user = auth.user;
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-user-id, x-role");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return; }
 
-  // 2) Routers
+  const user = await authUser(req);
+
+  if (await handleAuth(req, res, user)) return;
+  if (await handleUsers(req, res, user)) return;
   if (await handlePrescriptions(req, res, user)) return;
+
+  // ➕ montar aquí:
   if (await handleHistory(req, res, user)) return;
   if (await handleGrants(req, res, user)) return;
 
-  // 3) 404
-  res.writeHead(404, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ error: "Not Found" }));
+  res.writeHead(404, { "Content-Type": "application/json" })
+     .end(JSON.stringify({ error: "Not found" }));
 });
 
-server.on("error", (err) => {
-  if (err.code === "EADDRINUSE") {
-    console.error(`El puerto ${PORT} está en uso. Usa PORT=3001 (PowerShell: $env:PORT=3001; npm run dev)`);
-  } else {
-    console.error(err);
-  }
-});
-
-server.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
-});
+server.listen(PORT, () => console.log(`SRM-Backend listening on http://localhost:${PORT}`));

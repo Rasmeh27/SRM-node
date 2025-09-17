@@ -100,6 +100,42 @@
         "anchored_at": "2025-09-11T05:54:46.961Z"
       },
       "dispensed_at": "2025-09-11T06:06:01.144Z"
+    },
+    {
+      "id": "rx_1757859087670_k77q4v",
+      "patient_id": "user-patient-001",
+      "doctor_id": "user-doctor-001",
+      "status": "ISSUED",
+      "pdf_url": null,
+      "hash_sha256": "7fa0122a0be95a0f8a2ef68a0abf917180c4556b0c896e213bc05056a9c56199",
+      "created_at": "2025-09-14T14:11:27.670Z",
+      "dispensed_by": null,
+      "signed_at": "2025-09-14T14:19:26.567Z",
+      "signature_b64": "RsRG52MC2+sLLbSiS3P5Zn6TjuuHyu2omm6HcoFI4/dqcygjWiqLykWtt/T4RXUCitzV7ZK4rB3p+HAm0NNvu5sxUUhmNeHsCr9v7idmSFd0WsBH/ZfoHGr70tceU0iVeVFFcY6sbmiKBJkYHbboWbzDWkOviIsii5dwj/+fhCBhZzSYFG81k5wcVlGN81KPytLFTIew4OtDqSY3hU5HH0r4o0dWFv86JaQpoHH0MSjOsNbth1obmParK1Ytmh26tmv5Sv30Wgf57cmDB8TESQ8flRW+7gDoe1DEQCiu3Xr9YYW9iISWIYvh9DCIFXOmo826CbzHE3aQbq/s2/WUiQ==",
+      "anchor": {
+        "network": "sepolia",
+        "txid": "0x365bd0dcc2d7be3a93df24e3423e8d38f0f5fb5d5d8d2c0cb753745449ade5df",
+        "blockNumber": 9203070
+      }
+    },
+    {
+      "id": "rx_1757879427865_80njca",
+      "patient_id": "user-patient-001",
+      "doctor_id": "user-doctor-001",
+      "status": "DISPENSED",
+      "pdf_url": null,
+      "hash_sha256": "27c588d0312f8744ea69aa21cbf315f7ca6c4cd3b2f74cf14cb74b9cb4294ea1",
+      "created_at": "2025-09-14T19:50:27.865Z",
+      "dispensed_by": "user-pharmacy-001",
+      "notes": "Indicación general",
+      "signed_at": "2025-09-14T19:50:53.374Z",
+      "signature_b64": "QAjGGB+Ibxo/6ie75UA56ncccH88Jh6Lf1WcQHfzZH1noAHefStOQj9IfWBARx7+/mbMMpJ5vlc7B4iN4QG5yCX/9g+0Ypcs0Qfq4xuzLpVEkHbSZP9VzcrnwXGY7tGw4Ydo24mge3J0Au/cWag3tdrIHJgGcT80gXAbtYGj6E4j4YrQ9OLeMRuFbeaLXKkQuY+aXxWsKuswdSEY5ztum4Lj/2ZtZQTpA66q3Rt1FnSEg30A4XWZhJpSWeRvuxvi4dXW/6K//Ji5eVGrrVD8KWYHQynVVIfxcV/EfNXv0Y+TUCWg4tXwC9sbOS/RaGB3E9tV3qPyId3b5skMllWjDQ==",
+      "anchor": {
+        "network": "sepolia",
+        "txid": "0xe93db61dc92dffce79fc0c9b3783ab91d85095b321de3048bceb1db0f581c90a",
+        "blockNumber": 9203963
+      },
+      "dispensed_at": "2025-09-14T19:58:15.200Z"
     }
   ],
   "prescription_items": [
@@ -142,6 +178,38 @@
       "name": "Ibuprofeno 400 mg",
       "quantity": 1,
       "dosage": "1 tableta cada 8h si dolor (máx 3/día)"
+    },
+    {
+      "id": "item-rx_1757859087670_k77q4v-1",
+      "prescription_id": "rx_1757859087670_k77q4v",
+      "drug_code": "AMOX500",
+      "name": "Amoxicilina 500 mg",
+      "quantity": 1,
+      "dosage": "1 cápsula c/8h x7d"
+    },
+    {
+      "id": "item-rx_1757859087670_k77q4v-2",
+      "prescription_id": "rx_1757859087670_k77q4v",
+      "drug_code": "IBU400",
+      "name": "Ibuprofeno 400 mg",
+      "quantity": 1,
+      "dosage": "1 tableta c/8h si dolor"
+    },
+    {
+      "id": "item-rx_1757879427865_80njca-1",
+      "prescription_id": "rx_1757879427865_80njca",
+      "drug_code": "AMOX500",
+      "name": "Amoxicilina 500 mg",
+      "quantity": 1,
+      "dosage": "1 cápsula c/8h x7d"
+    },
+    {
+      "id": "item-rx_1757879427865_80njca-2",
+      "prescription_id": "rx_1757879427865_80njca",
+      "drug_code": "IBU400",
+      "name": "Ibuprofeno 400 mg",
+      "quantity": 1,
+      "dosage": "1 tableta c/8h si dolor"
     }
   ],
   "dispensations": [
@@ -165,6 +233,25 @@
       "prescription_id": "rx_1757566102532_jjcm3y",
       "pharmacy_id": "user-pharmacy-001",
       "timestamp": "2025-09-11T06:06:01.145Z",
+      "location": "Farmacia Demo",
+      "items": [
+        {
+          "drug_code": "AMOX500",
+          "quantity": 1
+        },
+        {
+          "drug_code": "IBU400",
+          "quantity": 1
+        }
+      ],
+      "verification_method": "QR",
+      "notes": "Entregado en mostrador"
+    },
+    {
+      "id": "disp-1757879895200",
+      "prescription_id": "rx_1757879427865_80njca",
+      "pharmacy_id": "user-pharmacy-001",
+      "timestamp": "2025-09-14T19:58:15.200Z",
       "location": "Farmacia Demo",
       "items": [
         {
@@ -334,6 +421,141 @@
         "ua": "PostmanRuntime/7.45.0"
       },
       "created_at": "2025-09-11T06:06:01.150Z"
+    },
+    {
+      "id": 1757859087676,
+      "actor_id": "user-doctor-001",
+      "action": "RX_CREATE",
+      "entity_id": "rx_1757859087670_k77q4v",
+      "metadata": {
+        "by": "user-doctor-001",
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.46.0"
+      },
+      "created_at": "2025-09-14T14:11:27.676Z"
+    },
+    {
+      "id": 1757859566569,
+      "actor_id": "user-doctor-001",
+      "action": "RX_SIGN",
+      "entity_id": "rx_1757859087670_k77q4v",
+      "metadata": {
+        "by": "user-doctor-001",
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.46.0"
+      },
+      "created_at": "2025-09-14T14:19:26.569Z"
+    },
+    {
+      "id": 1757859658079,
+      "actor_id": "user-doctor-001",
+      "action": "RX_ANCHOR",
+      "entity_id": "rx_1757859087670_k77q4v",
+      "metadata": {
+        "by": "user-doctor-001",
+        "anchor": {
+          "network": "placeholder",
+          "txid": "demo-1757859658077",
+          "anchored_at": "2025-09-14T14:20:58.077Z"
+        },
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.46.0"
+      },
+      "created_at": "2025-09-14T14:20:58.079Z"
+    },
+    {
+      "id": 1757868299557,
+      "actor_id": "user-doctor-001",
+      "action": "RX_ANCHOR",
+      "entity_id": "rx_1757859087670_k77q4v",
+      "metadata": {
+        "by": "user-doctor-001",
+        "anchor": {
+          "network": "sepolia",
+          "txid": "0x365bd0dcc2d7be3a93df24e3423e8d38f0f5fb5d5d8d2c0cb753745449ade5df",
+          "blockNumber": 9203070
+        },
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.46.0"
+      },
+      "created_at": "2025-09-14T16:44:59.557Z"
+    },
+    {
+      "id": 1757879427868,
+      "actor_id": "user-doctor-001",
+      "action": "RX_CREATE",
+      "entity_id": "rx_1757879427865_80njca",
+      "metadata": {
+        "by": "user-doctor-001",
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.46.0"
+      },
+      "created_at": "2025-09-14T19:50:27.869Z"
+    },
+    {
+      "id": 1757879453379,
+      "actor_id": "user-doctor-001",
+      "action": "RX_SIGN",
+      "entity_id": "rx_1757879427865_80njca",
+      "metadata": {
+        "by": "user-doctor-001",
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.46.0"
+      },
+      "created_at": "2025-09-14T19:50:53.379Z"
+    },
+    {
+      "id": 1757879497083,
+      "actor_id": "user-doctor-001",
+      "action": "RX_ANCHOR",
+      "entity_id": "rx_1757879427865_80njca",
+      "metadata": {
+        "by": "user-doctor-001",
+        "anchor": {
+          "network": "sepolia",
+          "txid": "0xe93db61dc92dffce79fc0c9b3783ab91d85095b321de3048bceb1db0f581c90a",
+          "blockNumber": 9203963
+        },
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.46.0"
+      },
+      "created_at": "2025-09-14T19:51:37.083Z"
+    },
+    {
+      "id": 1757879715746,
+      "actor_id": "user-doctor-001",
+      "action": "RX_QR_TOKEN",
+      "entity_id": "rx_1757879427865_80njca",
+      "metadata": {
+        "by": "user-doctor-001",
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.46.0"
+      },
+      "created_at": "2025-09-14T19:55:15.746Z"
+    },
+    {
+      "id": 1757879786251,
+      "actor_id": "user-pharmacy-001",
+      "action": "RX_VERIFY",
+      "entity_id": "rx_1757879427865_80njca",
+      "metadata": {
+        "by": "user-pharmacy-001",
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.46.0"
+      },
+      "created_at": "2025-09-14T19:56:26.252Z"
+    },
+    {
+      "id": 1757879895205,
+      "actor_id": "user-pharmacy-001",
+      "action": "RX_DISPENSE",
+      "entity_id": "rx_1757879427865_80njca",
+      "metadata": {
+        "by": "user-pharmacy-001",
+        "ip": "::1",
+        "ua": "PostmanRuntime/7.46.0"
+      },
+      "created_at": "2025-09-14T19:58:15.205Z"
     }
   ],
   "medications": [
