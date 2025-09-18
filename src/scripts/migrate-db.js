@@ -1,3 +1,5 @@
+//Luis Herasme
+
 // scripts/migrate-db.js
 // Usage: node scripts/migrate-db.js <in.json> <out.json>
 const fs = require("fs");

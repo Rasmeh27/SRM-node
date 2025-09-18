@@ -1,13 +1,22 @@
-// src/routes/auth.routes.js
-const { supabaseAdmin, supabaseAnon } = require("../infra/supabase");
-const { assignPatientToDoctor } = require("../repositories/users.repo"); // usamos repo directo
+//Luis Herasme y Xavier Fernandez
 
+// src/routes/auth.routes.js
+// Rutas de auth simples: registro (doctor/patient/pharmacy) y login con Supabase.
+
+const { supabaseAdmin, supabaseAnon } = require("../infra/supabase");
+const { assignPatientToDoctor } = require("../repositories/users.repo");
+
+// Respuesta JSON rápida
 function send(res, code, obj) {
   res.writeHead(code, { "Content-Type": "application/json" });
   res.end(JSON.stringify(obj));
   return true;
 }
+
+// Solo el path (sin query)
 function pathOnly(url) { return url.split("?")[0]; }
+
+// Lee body JSON (con límite)
 async function readJson(req, limit = 1e6) {
   return new Promise((resolve, reject) => {
     let data = "";
@@ -16,10 +25,12 @@ async function readJson(req, limit = 1e6) {
   });
 }
 
+// Router de auth (devuelve true si respondió, o false si no matcheó)
 async function handleAuth(req, res, user) {
   const p = pathOnly(req.url);
 
   // --- DOCTOR ---
+  // Crea usuario en Supabase y su perfil con role=doctor
   if (req.method === "POST" && p === "/api/auth/register-doctor") {
     const b = await readJson(req).catch(() => null);
     if (!b?.email || !b?.password || !b?.fullname || !b?.license_number) {
@@ -38,6 +49,7 @@ async function handleAuth(req, res, user) {
   }
 
   // --- PACIENTE ---
+  // Crea usuario y perfil role=patient; opcionalmente lo asigna a un doctor
   if (req.method === "POST" && p === "/api/auth/register-patient") {
     const b = await readJson(req).catch(() => null);
     if (!b?.email || !b?.password || !b?.fullname || !b?.document_id) {
@@ -53,7 +65,6 @@ async function handleAuth(req, res, user) {
     ]);
     if (e2) return send(res, 400, { error: e2.message });
 
-    // Asignar doctor si se envía
     if (b.doctor_id) {
       try {
         await assignPatientToDoctor({ doctorId: b.doctor_id, patientId: uid });
@@ -61,36 +72,34 @@ async function handleAuth(req, res, user) {
         return send(res, 201, { user_id: uid, warn: `Paciente creado, pero no se pudo asignar doctor: ${e.message}` });
       }
     }
-
     return send(res, 201, { user_id: uid });
   }
 
-  // --- FARMACIA ---  (💡 ESTO ESTABA FUERA; AHORA DENTRO DE handleAuth)
+  // --- FARMACIA ---
+  // Crea usuario y perfil role=pharmacy
   if (req.method === "POST" && p === "/api/auth/register-pharmacy") {
     const b = await readJson(req).catch(() => null);
     if (!b?.email || !b?.password || !b?.fullname) {
       return send(res, 400, { error: "Campos: email, password, fullname" });
     }
-
     const { data: signup, error: e1 } = await supabaseAdmin.auth.admin.createUser({
       email: b.email, password: b.password, email_confirm: true,
     });
     if (e1) return send(res, 400, { error: e1.message });
-
     const uid = signup.user.id;
     const { error: e2 } = await supabaseAdmin.from("profiles").insert([
       { id: uid, role: "pharmacy", fullname: b.fullname }
-      // Si luego agregas columnas como trade_name/phone, agrégalas aquí y en la tabla
     ]);
     if (e2) return send(res, 400, { error: e2.message });
-
     return send(res, 201, { user_id: uid });
   }
 
   // --- LOGIN ---
+  // Inicia sesión con Supabase; devuelve token y perfil básico
   if (req.method === "POST" && p === "/api/auth/login") {
     const b = await readJson(req).catch(() => null);
     if (!b?.email || !b?.password) return send(res, 400, { error: "email y password requeridos" });
+
     const { data, error } = await supabaseAnon.auth.signInWithPassword({
       email: b.email, password: b.password
     });
@@ -106,7 +115,7 @@ async function handleAuth(req, res, user) {
     });
   }
 
-  // si ninguna ruta coincidió
+  // No coincide con estas rutas
   return false;
 }
 

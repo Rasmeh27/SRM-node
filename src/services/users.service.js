@@ -1,7 +1,11 @@
+//Xavier Fernandez
+
 // src/services/users.service.js
+// Servicio de usuarios: listar doctores/pacientes y asignar/desasignar relación doctor–paciente.
+
 const repo = require("../repositories/users.repo");
 
-// Helper RBAC simple
+// RBAC simple: debe ser admin o el mismo doctor dueño del id
 function mustBeAdminOrSameDoctor(reqUser, doctorId) {
   if (!reqUser) return { ok: false, status: 401, error: "Auth requerido" };
   if (reqUser.role === "admin") return { ok: true };
@@ -9,13 +13,14 @@ function mustBeAdminOrSameDoctor(reqUser, doctorId) {
   return { ok: false, status: 403, error: "No autorizado" };
 }
 
+// Devuelve lista de doctores
 async function listDoctors() {
   const rows = await repo.listDoctors();
   return { ok: true, data: rows };
 }
 
+// Lista pacientes, opcionalmente filtrando por doctor (con permiso)
 async function listPatients({ requester, doctorId }) {
-  // si se filtra por doctor, verificar permisos
   if (doctorId) {
     const chk = mustBeAdminOrSameDoctor(requester, doctorId);
     if (!chk.ok) return chk;
@@ -24,6 +29,7 @@ async function listPatients({ requester, doctorId }) {
   return { ok: true, data: rows };
 }
 
+// Asigna un paciente a un doctor (admin o el mismo doctor)
 async function assignPatient({ requester, doctorId, patientId }) {
   const chk = mustBeAdminOrSameDoctor(requester, doctorId);
   if (!chk.ok) return chk;
@@ -36,6 +42,7 @@ async function assignPatient({ requester, doctorId, patientId }) {
   }
 }
 
+// Quita la asignación doctor–paciente
 async function unassignPatient({ requester, doctorId, patientId }) {
   const chk = mustBeAdminOrSameDoctor(requester, doctorId);
   if (!chk.ok) return chk;
@@ -47,8 +54,8 @@ async function unassignPatient({ requester, doctorId, patientId }) {
   }
 }
 
+// Devuelve el doctor asignado a un paciente (admin, el propio paciente o un doctor)
 async function getPatientDoctor({ requester, patientId }) {
-  // el propio paciente, su doctor; o el doctor/admin
   if (!requester) return { ok: false, status: 401, error: "Auth requerido" };
   if (
     requester.role !== "admin" &&

@@ -1,10 +1,16 @@
+//Xavier Fernandez y Luis Herasme
+
 // src/middleware/auth.js
+// Middleware de autenticación con Supabase. Permite acceso público a /api/prescriptions/verify.
+
 const { supabaseAdmin } = require("../infra/supabase");
 
-// helpers
+// Devuelve solo el path (sin querystring)
 function pathOnly(url) {
   return (url || "").split("?")[0];
 }
+
+// Rutas públicas permitidas (GET/POST /api/prescriptions/verify)
 function isPublic(req) {
   const p = pathOnly(req.url);
   return (
@@ -14,17 +20,17 @@ function isPublic(req) {
 }
 
 /**
- * Autenticación: Authorization: Bearer <token de Supabase>
- * Fallback dev: x-user-id / x-role
- * Devuelve objeto user: { id, role, fullname }
- * - Para /api/prescriptions/verify (GET/POST) se permite acceso público.
+ * Lee el usuario desde Authorization: Bearer <token Supabase>.
+ * Si es público, retorna user "public".
+ * Fallback para dev: x-user-id y x-role.
  */
 async function authUser(req) {
-  // ✅ Bypass público para farmacia: verificación de recetas
+  // Bypass público (farmacia verifica receta sin login)
   if (isPublic(req)) {
     return { id: null, role: "public", fullname: "Public" };
   }
 
+  // Token de Supabase
   try {
     const auth = req.headers["authorization"];
     if (auth?.startsWith("Bearer ")) {
@@ -36,23 +42,21 @@ async function authUser(req) {
           .select("id, role, fullname")
           .eq("id", data.user.id)
           .single();
-        if (prof) return prof;
+        if (prof) return prof; // { id, role, fullname }
       }
     }
   } catch (e) {
     console.warn("[auth] token inválido", e?.message);
   }
 
-  // Fallback dev
+  // Fallback dev (headers)
   const uid = req.headers["x-user-id"];
   const role = req.headers["x-role"];
   if (uid && role) {
-    return {
-      id: uid,
-      role,
-      fullname: (role || "USER").toUpperCase() + " Dev",
-    };
+    return { id: uid, role, fullname: (role || "USER").toUpperCase() + " Dev" };
   }
+
+  // No autenticado
   return null;
 }
 

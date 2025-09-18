@@ -1,4 +1,8 @@
+//Luis Herasme
+
 // src/infra/db.js
+// Conexión a Postgres (Supabase) y helper de consulta con log si la query es lenta.
+
 const { Pool } = require("pg");
 
 const connStr = process.env.DATABASE_URL;
@@ -6,15 +10,16 @@ if (!connStr) {
   console.warn("[db] Falta DATABASE_URL (Supabase).");
 }
 
-// Forzar TLS pero sin validar la CA (útil en Supabase/Windows/proxies)
+// Pool de conexiones (TLS requerido; sin validar CA para compatibilidad)
 const pool = new Pool({
   connectionString: connStr,
   ssl: { require: true, rejectUnauthorized: false },
-  max: 10,                 // recomendable con PgBouncer
+  max: 10,
   idleTimeoutMillis: 30000,
   allowExitOnIdle: true,
 });
 
+// Ejecuta una query y registra si tarda > 500ms.
 async function query(text, params) {
   const start = Date.now();
   const res = await pool.query(text, params);

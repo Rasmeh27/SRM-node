@@ -1,15 +1,23 @@
+//Luis Herasme
+
+// src/services/history.service.js
+// Arma el historial de un paciente: recetas, ítems y (si hay) dispensación.
+
 const { loadDB } = require("../db/storage");
 
+// Devuelve historial ordenado (más reciente primero) para un paciente dado.
 function buildHistoryForPatient(patientId, query = {}) {
   const db = loadDB();
 
-  //listar las recetas del paciente
+  // Recetas del paciente
   let list = db.prescriptions.filter((p) => p.patient_id === patientId);
 
+  // Índices rápidos
   const itemByBox = groupBy(db.prescription_items, "prescription_id");
   const dispByRx = indexBy(db.dispensations, "prescription_id");
   const userById = indexBy(db.users, "id");
 
+  // Mapea a formato de salida
   const result = list
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .map((p) => ({
@@ -37,6 +45,7 @@ function buildHistoryForPatient(patientId, query = {}) {
   return { ok: true, data: result };
 }
 
+// Agrupa por clave → { clave: [items...] }
 function groupBy(arr = [], key) {
   return arr.reduce((acc, it) => {
     (acc[it[key]] = acc[it[key]] || []).push(it);
@@ -44,6 +53,7 @@ function groupBy(arr = [], key) {
   }, {});
 }
 
+// Indexa por clave → { clave: item }
 function indexBy(arr = [], key) {
   return arr.reduce((acc, it) => ((acc[it[key]] = it), acc), {});
 }

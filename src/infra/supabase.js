@@ -1,4 +1,9 @@
+//Luis Herasme
+
+
 // src/infra/supabase.js
+// Clientes de Supabase: público (anon) y admin (service role) sin sesiones persistentes.
+
 const { createClient } = require("@supabase/supabase-js");
 
 const url  = process.env.SUPABASE_URL;
@@ -9,7 +14,10 @@ if (!url || !anon) {
   console.warn("[supabase] faltan SUPABASE_URL / SUPABASE_ANON_KEY");
 }
 
-const supabaseAnon  = createClient(url, anon,   { auth: { persistSession: false } });
+// Cliente para acciones públicas (RLS)
+const supabaseAnon  = createClient(url, anon, { auth: { persistSession: false } });
+
+// Cliente con privilegios (service role) para tareas de backend
 const supabaseAdmin = createClient(url, service || anon, { auth: { persistSession: false } });
 
 module.exports = { supabaseAnon, supabaseAdmin };

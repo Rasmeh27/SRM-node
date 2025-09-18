@@ -1,4 +1,8 @@
+//Xavier Fernandez
+
 // src/routes/users.routes.js
+// Endpoints de usuarios: listar doctores/pacientes y asignar/desasignar paciente a doctor.
+
 const {
   listDoctors,
   listPatients,
@@ -7,12 +11,17 @@ const {
   getPatientDoctor,
 } = require("../services/users.service");
 
+// Respuesta JSON simple
 function send(res, code, obj) {
   res.writeHead(code, { "Content-Type": "application/json" });
   res.end(JSON.stringify(obj));
   return true;
 }
+
+// Solo path (sin query)
 function pathOnly(url) { return url.split("?")[0]; }
+
+// Lee body JSON con límite
 async function readJson(req, limit = 1e6) {
   return new Promise((resolve, reject) => {
     let data = "";
@@ -32,13 +41,13 @@ async function handleUsers(req, res, user) {
   const p = pathOnly(req.url);
   const url = new URL(req.url, "http://localhost");
 
-  // ---- GET /api/doctors
+  // Lista doctores
   if (req.method === "GET" && p === "/api/doctors") {
     const out = await listDoctors();
     return send(res, 200, out.data);
   }
 
-  // ---- GET /api/patients
+  // Lista pacientes (opcional filtrar por doctorId)
   if (req.method === "GET" && p === "/api/patients") {
     const doctorId = url.searchParams.get("doctorId");
     const out = await listPatients({ requester: user, doctorId });
@@ -46,7 +55,7 @@ async function handleUsers(req, res, user) {
     return send(res, 200, out.data);
   }
 
-  // ---- GET /api/patients/:id/doctor
+  // Doctor asignado de un paciente
   const mGetDoc = req.method === "GET" && /^\/api\/patients\/([^\/]+)\/doctor$/.exec(p);
   if (mGetDoc) {
     const patientId = mGetDoc[1];
@@ -55,7 +64,7 @@ async function handleUsers(req, res, user) {
     return send(res, 200, out.data || {});
   }
 
-  // ---- POST /api/doctors/:doctorId/patients/:patientId (asignar)
+  // Asignar paciente a doctor
   const mAssign = req.method === "POST" && /^\/api\/doctors\/([^\/]+)\/patients\/([^\/]+)$/.exec(p);
   if (mAssign) {
     const doctorId = mAssign[1];
@@ -65,7 +74,7 @@ async function handleUsers(req, res, user) {
     return send(res, 200, out.data);
   }
 
-  // ---- DELETE /api/doctors/:doctorId/patients/:patientId (desasignar)
+  // Quitar asignación paciente-doctor
   const mUnassign = req.method === "DELETE" && /^\/api\/doctors\/([^\/]+)\/patients\/([^\/]+)$/.exec(p);
   if (mUnassign) {
     const doctorId = mUnassign[1];
@@ -75,7 +84,7 @@ async function handleUsers(req, res, user) {
     return send(res, 200, out.data);
   }
 
-  return false;
+  return false; // no coincide
 }
 
 module.exports = { handleUsers };

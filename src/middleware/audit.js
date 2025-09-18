@@ -1,6 +1,11 @@
+// Xavier Fernandez
+
 // src/middleware/audit.js
+// Guarda eventos de auditoría en la tabla public.audit_events.
+
 const { query } = require("../infra/db");
 
+// Inserta un registro de acción (quién, qué, sobre qué, y meta opcional).
 async function logAction(req, actorId, action, entityType, entityId, meta) {
   try {
     await query(
